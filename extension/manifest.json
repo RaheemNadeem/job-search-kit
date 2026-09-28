@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Job Search Kit \u2014 Save Job",
+  "version": "1.0.0",
+  "description": "One-click save of Indeed and LinkedIn job descriptions to your local Job Search Kit dashboard.",
+  "permissions": [
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://www.indeed.com/*",
+    "https://*.indeed.com/*",
+    "https://www.linkedin.com/*",
+    "https://*.linkedin.com/*",
+    "http://localhost:7867/*",
+    "http://127.0.0.1:7867/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.indeed.com/*",
+        "https://*.indeed.com/*",
+        "https://www.linkedin.com/jobs/*",
+        "https://*.linkedin.com/jobs/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

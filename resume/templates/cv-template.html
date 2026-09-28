@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{NAME}} | {{TITLE}}</title>
+
+<!-- Tailwind Play CDN: JIT-compiled at PDF render time. Palette and font families
+     are extended below so utility classes like `text-accent-600`, `font-display`,
+     and `text-cv-md` resolve to the editorial-CV design system. -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['"DM Sans"', 'Arial', 'sans-serif'],
+          display: ['"Space Grotesk"', 'Arial', 'sans-serif'],
+        },
+        colors: {
+          ink: {
+            50:  '#f1f3f7',
+            100: '#dde2eb',
+            200: '#b8c1d1',
+            300: '#8893aa',
+            400: '#535e74',
+            500: '#303641',
+            600: '#1f2531',
+            700: '#151a23',
+            800: '#0e1218',
+            900: '#06070a',
+          },
+          accent: {
+            50:  '#e6f4f3',
+            100: '#c4e6e4',
+            200: '#8fcdca',
+            300: '#5bb3af',
+            400: '#2f9893',
+            500: '#127b77',
+            600: '#0f6764',
+            700: '#0c5451',
+            800: '#09403e',
+            900: '#062c2b',
+          },
+          gold: {
+            100: '#fff8e1',
+            200: '#eadca9',
+            500: '#b98612',
+          },
+          surface: '#f8fafc',
+          faint:   '#e8edf4',
+        },
+        fontSize: {
+          'micro':  ['7.6px',  { lineHeight: '1.25' }],
+          '2xs':    ['8.0px',  { lineHeight: '1.35' }],
+          'xxs':    ['8.5px',  { lineHeight: '1.40' }],
+          'cv':     ['9.05px', { lineHeight: '1.42' }],
+          'cv-sm':  ['9.4px',  { lineHeight: '1.30' }],
+          'cv-md':  ['10.0px', { lineHeight: '1.35' }],
+          'cv-lg':  ['10.7px', { lineHeight: '1.25' }],
+          'cv-xl':  ['11.1px', { lineHeight: '1.20' }],
+          'cv-h1':  ['27px',   { lineHeight: '1.00' }],
+        },
+        boxShadow: {
+          'chip': '0 1px 2px rgba(21, 26, 35, 0.05)',
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  @font-face { font-family: 'Space Grotesk'; src: url('./fonts/space-grotesk-latin.woff2') format('woff2'); font-weight: 300 700; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'Space Grotesk'; src: url('./fonts/space-grotesk-latin-ext.woff2') format('woff2'); font-weight: 300 700; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'DM Sans'; src: url('./fonts/dm-sans-latin.woff2') format('woff2'); font-weight: 100 1000; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'DM Sans'; src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2'); font-weight: 100 1000; font-style: normal; font-display: swap; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', Arial, sans-serif;
+    background: #ffffff;
+    color: #303641;
+    font-size: 9.75px;
+    line-height: 1.42;
+  }
+  strong { color: #151a23; font-weight: 700; }
+
+  /* Local utility fallback for Playwright/PDF rendering when Tailwind CDN is unavailable. */
+  .mx-auto { margin-left: auto; margin-right: auto; }
+  .bg-white { background: #fff; }
+  .font-display { font-family: 'Space Grotesk', Arial, sans-serif; }
+  .font-bold { font-weight: 700; }
+  .font-extrabold { font-weight: 800; }
+  .italic { font-style: italic; }
+  .leading-none { line-height: 1; }
+  .whitespace-nowrap { white-space: nowrap; }
+  .min-w-0 { min-width: 0; }
+  .flex { display: flex; }
+  .inline-flex { display: inline-flex; }
+  .grid { display: grid; }
+  .inline-grid { display: inline-grid; }
+  .items-center { align-items: center; }
+  .items-baseline { align-items: baseline; }
+  .justify-between { justify-content: space-between; }
+  .place-items-center { place-items: center; }
+  .flex-wrap { flex-wrap: wrap; }
+  .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .rounded-full { border-radius: 999px; }
+  .rounded-md { border-radius: 6px; }
+  .rounded-sm { border-radius: 3px; }
+  .border { border: 1px solid #e8edf4; }
+  .border-b { border-bottom: 1px solid #e8edf4; }
+  .border-b-2 { border-bottom: 2px solid #127b77; }
+  .border-faint { border-color: #e8edf4; }
+  .border-accent-500 { border-color: #127b77; }
+  .shadow-chip { box-shadow: 0 1px 2px rgba(21, 26, 35, 0.05); }
+  .text-ink-700 { color: #151a23; }
+  .text-ink-400 { color: #687181; }
+  .text-accent-600 { color: #0f6764; }
+  .text-gold-500 { color: #b98612; }
+  .text-faint { color: #e8edf4; }
+  .uppercase { text-transform: uppercase; }
+  .tracking-\[0\.08em\] { letter-spacing: 0.08em; }
+  .text-micro { font-size: 7.6px; line-height: 1.25; }
+  .text-2xs { font-size: 8px; line-height: 1.35; }
+  .text-cv-sm { font-size: 9.4px; line-height: 1.3; }
+  .text-cv-md { font-size: 10px; line-height: 1.35; }
+  .text-cv-lg { font-size: 10.7px; line-height: 1.25; }
+  .text-cv-xl { font-size: 11.1px; line-height: 1.2; }
+  .text-cv-h1 { font-size: 27px; line-height: 1; }
+  .px-8 { padding-left: 32px; padding-right: 32px; }
+  .pt-6 { padding-top: 24px; }
+  .pb-3 { padding-bottom: 12px; }
+  .py-4 { padding-top: 16px; padding-bottom: 16px; }
+  .pb-6 { padding-bottom: 24px; }
+  .py-2\.5 { padding-top: 10px; padding-bottom: 10px; }
+  .px-2 { padding-left: 8px; padding-right: 8px; }
+  .px-2\.5 { padding-left: 10px; padding-right: 10px; }
+  .py-1\.5 { padding-top: 6px; padding-bottom: 6px; }
+  .px-1\.5 { padding-left: 6px; padding-right: 6px; }
+  .pb-2 { padding-bottom: 8px; }
+  .mt-1 { margin-top: 4px; }
+  .mt-2 { margin-top: 8px; }
+  .mb-3\.5 { margin-bottom: 14px; }
+  .mb-2\.5 { margin-bottom: 10px; }
+  .mb-1\.5 { margin-bottom: 6px; }
+  .mt-\[1px\] { margin-top: 1px; }
+  .mb-\[2px\] { margin-bottom: 2px; }
+  .mb-\[3px\] { margin-bottom: 3px; }
+  .gap-1\.5 { gap: 6px; }
+  .gap-2 { gap: 8px; }
+  .gap-2\.5 { gap: 10px; }
+  .gap-5 { gap: 20px; }
+  .gap-x-2 { column-gap: 8px; }
+  .gap-y-1 { row-gap: 4px; }
+  .space-y-1\.5 > * + * { margin-top: 6px; }
+  [class~="w-[13px]"] { width: 13px; }
+  [class~="h-[13px]"] { height: 13px; }
+  [class~="w-[8.5px]"] { width: 8.5px; }
+  [class~="h-[8.5px]"] { height: 8.5px; }
+  [class~="min-h-[43px]"] { min-height: 43px; }
+  [class~="gap-[7px]"] { gap: 7px; }
+  [class~="pl-[3px]"] { padding-left: 3px; }
+  [class~="pr-[7px]"] { padding-right: 7px; }
+  [class~="py-[2px]"] { padding-top: 2px; padding-bottom: 2px; }
+  [class~="px-[7px]"] { padding-left: 7px; padding-right: 7px; }
+  [class~="text-[7.6px]"] { font-size: 7.6px; }
+  [class~="text-[8px]"] { font-size: 8px; }
+  [class~="text-[8.15px]"] { font-size: 8.15px; }
+  [class~="text-[8.25px]"] { font-size: 8.25px; }
+  [class~="text-[8.5px]"] { font-size: 8.5px; }
+  [class~="text-[8.72px]"] { font-size: 8.72px; }
+  [class~="leading-[1.28]"] { line-height: 1.28; }
+  [class~="leading-[1.38]"] { line-height: 1.38; }
+
+  /* Teal CV link with the established yellow-highlight hover affordance. */
+  a.cv-link {
+    color: #127b77;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color 120ms ease, box-shadow 120ms ease;
+  }
+  a.cv-link:hover, a.cv-link:focus-visible {
+    background-color: #fff2a8;
+    box-shadow: inset 0 -0.42em 0 rgba(239, 212, 107, 0.42);
+    outline: none;
+  }
+
+  /* Bullet list styling: gold marker, compact tracking. */
+  ul.cv-list { padding-left: 13px; }
+  ul.cv-list li { color: #303641; font-size: 9.05px; margin-bottom: 2px; }
+  ul.cv-list li::marker { color: #b98612; }
+
+  /* Section title with the trailing hairline rule. */
+  .cv-section-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #151a23;
+    font-family: 'Space Grotesk', Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .cv-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e8edf4;
+  }
+
+  /* ---- Element classes emitted by build-cv.mjs render functions ----
+     These are kept here (not as Tailwind utilities) because the JS render
+     helpers in build-cv.mjs hardcode the class names. Keeps the contract
+     stable while the visual system uses Tailwind tokens (teal accent / ink).
+  */
+  .fit-card {
+    background: #fff;
+    border: 1px solid #e8edf4;
+    border-left: 3px solid #127b77;
+    border-radius: 6px;
+    padding: 7px 9px;
+    margin-bottom: 6px;
+  }
+  .fit-card-title {
+    color: #151a23;
+    font-family: 'Space Grotesk', Arial, sans-serif;
+    font-size: 9.4px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 2px;
+  }
+  .fit-card-body {
+    color: #303641;
+    font-size: 8.72px;
+    line-height: 1.38;
+  }
+
+  .evidence-block {
+    background: #f8fafc;
+    border: 1px solid #e8edf4;
+    border-radius: 6px;
+    padding: 7px 9px;
+    margin-bottom: 6px;
+  }
+  .evidence-block:first-of-type {
+    background: #fff8e1;
+    border-color: #eadca9;
+  }
+  .evidence-title {
+    color: #151a23;
+    font-family: 'Space Grotesk', Arial, sans-serif;
+    font-size: 9.4px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 2px;
+  }
+  .evidence-body {
+    color: #303641;
+    font-size: 8.72px;
+    line-height: 1.38;
+  }
+
+  .competency-tag {
+    background: #e6f4f3;
+    border: 1px solid #c4e6e4;
+    border-radius: 3px;
+    color: #0c5451;
+    font-size: 8px;
+    font-weight: 700;
+    padding: 2px 6px;
+    display: inline-block;
+  }
+
+  /* Auth pill emitted by build-cv.mjs as <span class="auth-pill">...</span>.
+     Sits beside the location pill in the masthead. Green / mint to read as
+     a credential affordance, not a brand pill. */
+  .auth-pill {
+    display: inline-block;
+    background: #f1fbf6;
+    border: 1px solid #cfe8dc;
+    border-radius: 3px;
+    color: #24714d;
+    font-size: 8.5px;
+    font-weight: 700;
+    padding: 2px 7px;
+    line-height: 1.4;
+  }
+
+  .skill-row {
+    border-bottom: 1px solid #e8edf4;
+    color: #303641;
+    font-size: 8.65px;
+    line-height: 1.37;
+    padding: 4px 0;
+  }
+  .skill-row:last-child { border-bottom: 0; }
+  .skill-cat {
+    color: #0f6764;
+    display: block;
+    font-family: 'Space Grotesk', Arial, sans-serif;
+    font-size: 8.25px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body class="bg-white">
+
+<main class="mx-auto bg-white" style="max-width: 8.5in;">
+
+  <!-- ===================== MASTHEAD ===================== -->
+  <header class="px-8 pt-6 pb-3 border-b-2 border-accent-500">
+    <h1 class="font-display font-bold text-ink-700 text-cv-h1 leading-none">{{NAME}}</h1>
+    <div class="font-display font-bold text-accent-600 text-cv-lg mt-1">{{TAGLINE}}</div>
+
+    <!-- Contact row -->
+    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-2xs text-ink-400">
+{{CONTACT_ROW}}
+    </div>
+
+    <!-- Location + authorization pills -->
+    <div class="flex flex-wrap gap-1.5 mt-2">
+{{PILLS}}
+    </div>
+  </header>
+
+{{PROOF_STRIP}}
+
+  <div class="grid gap-5 px-8 py-4 pb-6" style="grid-template-columns: minmax(0, 1.36fr) minmax(0, 0.9fr);">
+  <!-- =================== LEFT COLUMN =================== -->
+  <div class="min-w-0">
+
+    <section class="mb-3.5">
+      <div class="cv-section-title"><span>Executive Summary</span></div>
+      <div class="space-y-1.5">
+{{SUMMARY}}
+      </div>
+    </section>
+
+    <section class="mb-3.5">
+      <div class="cv-section-title"><span>Work Experience</span></div>
+{{EXPERIENCE}}
+    </section>
+
+{{PROJECTS}}
+
+    <section class="avoid-break mb-3.5">
+      <div class="cv-section-title"><span>Skills &amp; Tools</span></div>
+      <div>
+{{SKILLS}}
+      </div>
+    </section>
+
+{{EDUCATION}}
+
+  </div>
+
+  <!-- =================== RIGHT COLUMN =================== -->
+  <div class="min-w-0">
+
+    <section class="avoid-break mb-3.5">
+      <div class="cv-section-title"><span>{{FIT_TITLE}}</span></div>
+      <div>
+{{FIT_CARDS}}
+      </div>
+    </section>
+
+    <section class="avoid-break mb-3.5">
+      <div class="cv-section-title"><span>{{EVIDENCE_TITLE}}</span></div>
+{{EVIDENCE_BLOCKS}}
+    </section>
+
+    <section class="avoid-break mb-3.5">
+      <div class="cv-section-title"><span>Core Competencies</span></div>
+      <div class="flex flex-wrap gap-1">
+{{COMPETENCIES}}
+      </div>
+    </section>
+
+{{RECOGNITION}}
+
+{{ADDITIONAL_NOTES}}
+
+  </div>
+  </div>
+</main>
+</body>
+</html>

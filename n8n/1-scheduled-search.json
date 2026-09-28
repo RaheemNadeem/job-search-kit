@@ -1,0 +1,117 @@
+{
+  "name": "Job Search Kit — Scheduled search",
+  "nodes": [
+    {
+      "id": "9a61880e-c3c8-4817-97a0-494150c8abd6",
+      "name": "Every 2 hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "22448086-33c5-4cb8-bf36-622d1d93e04e",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bc66d29c-09f0-4dec-b8ce-2b3aa35a3971",
+              "name": "dashboardUrl",
+              "value": "http://host.docker.internal:7867",
+              "type": "string"
+            },
+            {
+              "id": "bfefce95-5899-4fb3-8986-9f7f6a3edd43",
+              "name": "token",
+              "value": "PASTE_DASHBOARD_TOKEN_HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "Edit these two values. dashboardUrl: http://localhost:7867 if n8n runs directly on your computer, http://host.docker.internal:7867 if n8n runs in Docker. token: the DASHBOARD_TOKEN from your .env."
+    },
+    {
+      "id": "ef9e0569-5150-47ab-aee5-4f5288cbb57e",
+      "name": "Start search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Settings').item.json.dashboardUrl }}/api/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Settings').item.json.token }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"source\": \"all\"}"
+      }
+    }
+  ],
+  "connections": {
+    "Every 2 hours": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Start search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "active": false
+}

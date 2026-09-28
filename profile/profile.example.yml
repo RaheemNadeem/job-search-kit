@@ -1,0 +1,103 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  YOUR PROFILE — the single source of truth for everything the kit does.
+#
+#  1. Copy this file:   cp profile/profile.example.yml profile/profile.yml
+#  2. Replace the example person (Jordan Example) with your own details.
+#
+#  profile/profile.yml is git-ignored, so your details never get committed.
+#  The AI treats this file as the ONLY truth about you: it will emphasise and
+#  reorder what is here for each job, but never invent anything that isn't.
+#  Light inline HTML is allowed in text fields: <strong>bold</strong>, &amp;
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Jordan Example
+headline: Full Stack Developer            # default tagline when not tailored
+email: jordan@example.com
+phone: "+1 555 0100"
+location: Austin, TX                      # where you live
+location_note: Open to Relocation / Remote  # shown as a pill on the resume
+
+links:                                    # icon: linkedin | github | web
+  - { icon: linkedin, url: "https://linkedin.com/in/jordan-example", label: "linkedin.com/in/jordan-example" }
+  - { icon: github,   url: "https://github.com/jordan-example",     label: "github.com/jordan-example" }
+  - { icon: web,      url: "https://jordan.example.com",            label: "jordan.example.com" }
+
+work_authorization:
+  summary: "US citizen, no sponsorship needed"   # used by the AI to judge visa/clearance blockers
+  show_on_resume: false                          # true = show resume_text as a pill under your name
+  note_on_resume: false                          # true = add resume_text to "Additional Notes"
+  resume_text: "US citizen, no sponsorship required"
+
+# Short overview the AI can draw on (not printed as-is).
+summary: >
+  Full stack developer with 5 years building web applications in React,
+  TypeScript and Node.js, with a focus on performance and accessibility.
+
+# Optional strip of 1-4 highlight cards under your name.
+proof_points:
+  - { label: Experience, title: "5+ yrs production",   body: "SaaS products, end-to-end delivery." }
+  - { label: Frontend,   title: "React / TypeScript",  body: "Design systems, accessibility, performance." }
+  - { label: Backend,    title: "Node.js / Postgres",  body: "REST APIs, background jobs, testing." }
+
+# Work history, most recent first. `id` is a short stable key the AI uses to
+# retitle each role per job (it never changes the company or dates).
+experience:
+  - id: current
+    company: Acme Analytics
+    title: Software Engineer, Full Stack
+    period: "Mar 2022 &ndash; Present"
+    context: B2B analytics SaaS, customer dashboards and reporting.
+    bullets:
+      - Built and maintain a <strong>React + TypeScript</strong> dashboard used daily by 2,000 customers.
+      - Designed <strong>Node.js REST APIs</strong> backed by PostgreSQL; cut p95 latency 35%.
+      - Led the move to a shared component library adopted by three teams.
+  - id: previous
+    company: Pixel &amp; Co
+    title: Web Developer
+    period: "Jun 2019 &ndash; Feb 2022"
+    context: Small agency, client websites and campaigns.
+    bullets:
+      - Shipped 25+ responsive client sites in HTML, CSS and JavaScript.
+      - Introduced automated accessibility checks to the agency's QA process.
+
+projects:
+  - name: Open-source Chart Kit
+    badge: Open Source
+    description: A small React charting library with 400+ GitHub stars.
+    links: [{ url: "https://github.com/jordan-example/chart-kit", label: "GitHub" }]
+
+# Your baseline skills (the AI reorders/regroups these per job).
+skills:
+  Frontend: React, TypeScript, Next.js, HTML, CSS, Tailwind
+  Backend: Node.js, Express, PostgreSQL, Redis
+  Tooling: Git, GitHub Actions, Docker, Jest, Playwright
+
+education:
+  - degree: B.S. Computer Science
+    school: State University
+    period: "2015 &ndash; 2019"
+    description: Data structures, databases, software engineering.
+
+recognition:
+  - title: Hackathon Winner
+    body: First place at City Hack 2023 with a real-time transit app.
+
+# ── How jobs are scored (0-5) ────────────────────────────────────────────────
+preferences:
+  target_roles: [Full Stack Developer, Frontend Engineer, Software Engineer]
+  core_stack: [React, TypeScript, Node.js, PostgreSQL]
+  # Jobs whose PRIMARY stack is one of these score low even if keywords overlap.
+  mismatched_stacks: [Java / Spring backend, embedded C/C++, SAP ABAP]
+  nice_to_have: [accessibility, design systems]
+  dealbreakers: [security clearance required, unpaid, commission only]
+  locations: [Austin, TX, Remote (US)]
+  remote_ok: true
+  open_to_relocation: true
+
+# ── How resumes are tailored ─────────────────────────────────────────────────
+tailoring:
+  seniority: mid-to-senior individual contributor
+  retitle_roles: true          # let the AI adjust role titles to the job's stack (truthfully)
+  match_job_location: false    # true = use the job's city as the location pill for on-site roles
+  paper: letter                # letter | a4
+  extra_rules: ""              # anything else, e.g. "Always mention bilingual English/Spanish."

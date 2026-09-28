@@ -1,0 +1,34 @@
+{
+  "name": "job-search-kit",
+  "version": "1.0.0",
+  "description": "Self-hosted job search pipeline: Indeed + LinkedIn scrapers, AI job scoring, tailored resume PDFs, a local dashboard, a browser extension and n8n automations.",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "start": "node dashboard/server.mjs",
+    "login:indeed": "node scrapers/indeed.mjs --login",
+    "login:linkedin": "node scrapers/linkedin.mjs --login",
+    "search": "node src/pipeline.mjs search",
+    "search:indeed": "node src/pipeline.mjs search --indeed",
+    "search:linkedin": "node src/pipeline.mjs search --linkedin",
+    "queue": "node src/pipeline.mjs queue",
+    "add": "node src/pipeline.mjs add",
+    "rate": "node src/rate.mjs",
+    "resume": "node resume/generate-cv.mjs",
+    "resume:sample": "node scripts/sample-resume.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "cloakbrowser": "^0.4.10",
+    "js-yaml": "^4.1.1",
+    "playwright": "^1.58.1"
+  },
+  "optionalDependencies": {
+    "camoufox-js": "^0.11.2",
+    "playwright-core": "^1.58.1"
+  }
+}

@@ -1,0 +1,13 @@
+# ── Your personal data: NEVER commit ──
+.env
+profile/profile.yml
+profile/search.json
+profile/context.md
+data/*
+!data/.gitkeep
+
+# ── Tooling ──
+node_modules/
+__pycache__/
+*.log
+.DS_Store

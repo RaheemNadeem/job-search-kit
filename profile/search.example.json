@@ -1,0 +1,25 @@
+{
+  "_comment": "Copy to profile/search.json. What the scheduled search looks for. Indeed: each query runs in every tier (most specific first); a job is tagged with the first tier that finds it. `domain` picks a country site (ca.indeed.com, uk.indeed.com, ...). Indeed queries accept AND / OR / quotes. LinkedIn: each query runs in each location. fromageDays = only jobs posted in the last N days. maxPerRun caps new jobs per run.",
+  "indeed": {
+    "enabled": true,
+    "queries": [
+      "react developer",
+      "full stack developer (react OR node)",
+      "frontend engineer typescript"
+    ],
+    "tiers": [
+      { "label": "Austin", "l": "Austin, TX", "radius": 25 },
+      { "label": "Remote", "l": "Remote" },
+      { "label": "USA", "l": "United States" }
+    ],
+    "fromageDays": 1,
+    "maxPerRun": 40
+  },
+  "linkedin": {
+    "enabled": true,
+    "queries": ["react developer", "full stack engineer"],
+    "locations": ["United States"],
+    "fromageDays": 1,
+    "maxPerQuery": 25
+  }
+}

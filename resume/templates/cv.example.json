@@ -1,0 +1,41 @@
+{
+  "_comment": "Per-job tailored content. The AI writes this for you (npm run resume). You can also hand-write one and run: node resume/build-cv.mjs path/to/cv.json. Fixed facts (name, contact, employers, dates, education) come from profile/profile.yml.",
+  "slug": "acme-frontend-engineer",
+  "date": "2026-01-15",
+  "format": "letter",
+  "title": "Frontend Engineer",
+  "tagline": "Frontend Engineer &middot; React &middot; TypeScript &middot; Design Systems",
+  "location_note": "Remote",
+
+  "role_titles": {
+    "current": "Software Engineer, Frontend (React / TypeScript)",
+    "previous": "Web Developer, Client Sites (JavaScript / CSS)"
+  },
+
+  "summary": [
+    "Frontend engineer with <strong>5+ years</strong> building accessible, fast React applications for data-heavy products.",
+    "Comfortable across the stack: Node.js APIs, PostgreSQL, CI/CD and production monitoring."
+  ],
+
+  "fit_title": "What I Bring",
+  "fit_cards": [
+    { "title": "Production React at Scale", "body": "Owned a 40-screen React + TypeScript app used daily by 2,000 operators." },
+    { "title": "Design Systems", "body": "Built and documented a shared component library adopted by three teams." }
+  ],
+
+  "competencies": ["React", "TypeScript", "Accessibility (WCAG)", "Design Systems", "Node.js", "Testing (Jest / Playwright)"],
+
+  "evidence_title": "Relevant Expertise",
+  "evidence_blocks": [
+    { "title": "Performance", "body": "Cut initial load time <strong>40%</strong> with code splitting and caching." },
+    { "title": "Quality", "body": "Raised test coverage from 20% to 75% and added visual regression checks." }
+  ],
+
+  "skills": [
+    { "cat": "Frontend", "body": "React, TypeScript, Next.js, CSS / Tailwind" },
+    { "cat": "Backend", "body": "Node.js, Express, PostgreSQL" },
+    { "cat": "Tooling", "body": "Git, GitHub Actions, Docker, Playwright" }
+  ],
+
+  "additional_notes": []
+}

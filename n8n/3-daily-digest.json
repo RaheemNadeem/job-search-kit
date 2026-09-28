@@ -1,0 +1,213 @@
+{
+  "name": "Job Search Kit — Daily digest",
+  "nodes": [
+    {
+      "id": "48b4515f-a91d-407e-bec1-5f6fe5cede1b",
+      "name": "Every morning",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "347809da-9ef9-4491-8e56-625d26f3cfd6",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "489ad766-3ac0-452d-8c2a-3d56afc4d3fb",
+              "name": "dashboardUrl",
+              "value": "http://host.docker.internal:7867",
+              "type": "string"
+            },
+            {
+              "id": "ee6f15d7-e72c-4c47-9e37-3bc6a4715e34",
+              "name": "token",
+              "value": "PASTE_DASHBOARD_TOKEN_HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "Edit these two values. dashboardUrl: http://localhost:7867 if n8n runs directly on your computer, http://host.docker.internal:7867 if n8n runs in Docker. token: the DASHBOARD_TOKEN from your .env."
+    },
+    {
+      "id": "a37a1137-a67c-478b-bf10-c11fb872b9b2",
+      "name": "Top new jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Settings').item.json.dashboardUrl }}/api/top?min=4&hours=24",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Settings').item.json.token }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "52316863-e262-4b98-809b-e8b0e24d7ce1",
+      "name": "Any jobs?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3e8c83fb-6424-4d67-94d9-2ac4df6fc7ae",
+              "leftValue": "={{ $json.count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "21ea6e4b-11fe-4172-8332-4554a2580be0",
+      "name": "Build email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -20
+      ],
+      "parameters": {
+        "jsCode": "const { jobs = [] } = $json;\nconst esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst rows = jobs.map((j) => `<li style=\"margin-bottom:8px\"><b>★ ${j.score}</b> ${esc(j.title)} — ${esc(j.company)}${j.location ? ' · ' + esc(j.location) : ''}${j.salary ? ' · ' + esc(j.salary) : ''}${j.hasResume ? ' · 📄 resume ready' : ''}<br><a href=\"${esc(j.url)}\">View posting</a>${j.reasons?.length ? `<br><small style=\"color:#555\">${j.reasons.map(esc).join(' · ')}</small>` : ''}</li>`).join('');\nreturn [{ json: {\n  subject: `${jobs.length} strong job match${jobs.length === 1 ? '' : 'es'} today`,\n  html: `<h2>Today's best matches</h2><ul>${rows}</ul><p>Open your dashboard to generate resumes and track applications.</p>`,\n} }];"
+      }
+    },
+    {
+      "id": "a240e038-3366-4514-9faa-2ddfd40adfbb",
+      "name": "Send digest",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1100,
+        -20
+      ],
+      "parameters": {
+        "fromEmail": "you@example.com",
+        "toEmail": "you@example.com",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "html",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "notes": "Connect an SMTP credential and set From/To to your address. Or swap this node for Gmail, Slack, Telegram…"
+    }
+  ],
+  "connections": {
+    "Every morning": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Top new jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top new jobs": {
+      "main": [
+        [
+          {
+            "node": "Any jobs?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any jobs?": {
+      "main": [
+        [
+          {
+            "node": "Build email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build email": {
+      "main": [
+        [
+          {
+            "node": "Send digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "active": false
+}

@@ -1,0 +1,59 @@
+{
+  "name": "Job Search Kit — Notifications",
+  "nodes": [
+    {
+      "id": "5e1d38f7-f367-4d0b-a34a-312f7171fa28",
+      "name": "From dashboard",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "c9d4c342-108b-4a94-81d4-c7e6f96e3a05",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "job-search-kit",
+        "options": {}
+      },
+      "notes": "Set NOTIFY_WEBHOOK_URL in your .env to this node's Production URL, e.g. http://localhost:5678/webhook/job-search-kit"
+    },
+    {
+      "id": "b5a3c26a-23a4-414a-b070-db2fde8d292f",
+      "name": "Send email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "fromEmail": "you@example.com",
+        "toEmail": "you@example.com",
+        "subject": "={{ $json.body.subject }}",
+        "emailFormat": "html",
+        "html": "={{ $json.body.html || ('<p>' + $json.body.text + '</p>') }}",
+        "options": {}
+      },
+      "notes": "Import summaries and 'captcha needs solving' alerts. Connect an SMTP credential, or swap for Slack/Telegram/Discord."
+    }
+  ],
+  "connections": {
+    "From dashboard": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "active": false
+}

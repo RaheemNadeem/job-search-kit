@@ -1,0 +1,59 @@
+.jd-bridge-btn {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 2147483647 !important;
+  background: hsl(187, 74%, 32%) !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 10px 18px !important;
+  border-radius: 6px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+  transition: background 0.18s ease, transform 0.1s ease, box-shadow 0.18s ease !important;
+}
+
+.jd-bridge-btn:hover {
+  background: hsl(187, 74%, 26%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22) !important;
+}
+
+.jd-bridge-btn:active {
+  transform: translateY(0) !important;
+}
+
+.jd-bridge-btn:disabled {
+  opacity: 0.7 !important;
+  cursor: wait !important;
+}
+
+.jd-bridge-toast {
+  position: fixed !important;
+  bottom: 80px !important;
+  right: 24px !important;
+  z-index: 2147483647 !important;
+  background: hsl(145, 55%, 25%) !important;
+  color: #fff !important;
+  padding: 10px 16px !important;
+  border-radius: 6px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  max-width: 320px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+  animation: jdBridgeIn 0.2s ease-out !important;
+}
+
+.jd-bridge-toast.error {
+  background: hsl(0, 65%, 45%) !important;
+}
+
+@keyframes jdBridgeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Job Search Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal: hsl(187, 74%, 32%);
+    --teal-dark: hsl(187, 74%, 24%);
+    --teal-bg: hsl(187, 40%, 95%);
+    --purple: hsl(270, 70%, 45%);
+    --green: hsl(145, 55%, 32%);
+    --green-bg: hsl(145, 35%, 93%);
+    --gray-50: #f8f9fb;
+    --gray-100: #eef0f4;
+    --gray-200: #d8dde4;
+    --gray-300: #b9c0cb;
+    --gray-500: #6b7480;
+    --gray-700: #303843;
+    --gray-900: #14181f;
+    --warn: hsl(35, 85%, 50%);
+    --danger: hsl(0, 65%, 48%);
+    --submitted: hsl(145, 55%, 32%);
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-900);
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, var(--teal) 0%, var(--purple) 100%);
+    color: #fff;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  header .stats { display: flex; gap: 16px; font-size: 12px; }
+  header .stat { display: flex; flex-direction: column; align-items: flex-end; }
+  header .stat b { font-size: 18px; font-weight: 700; }
+  header .stat span { opacity: 0.85; font-size: 11px; }
+
+  .toolbar {
+    background: #fff;
+    padding: 14px 32px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .toolbar input[type=search] {
+    flex: 1;
+    min-width: 240px;
+    padding: 8px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .toolbar input[type=search]:focus { border-color: var(--teal); }
+  .filter-btns { display: flex; gap: 4px; background: var(--gray-100); border-radius: 6px; padding: 3px; }
+  .filter-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn.active { background: #fff; color: var(--teal); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .filter-btn:not(.active):hover { color: var(--gray-900); }
+  .score-range {
+    border: 1px solid var(--gray-200);
+    background: #fff;
+    padding: 7px 28px 7px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-700);
+    cursor: pointer;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236b7480' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .score-range:hover { border-color: var(--teal); color: var(--teal); }
+  .score-range:focus { outline: none; border-color: var(--teal); }
+  .score-range.active { border-color: var(--teal); color: var(--teal); background-color: var(--teal-bg); }
+  .refresh-btn {
+    border: 1px solid var(--gray-200);
+    background: #fff;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--gray-700);
+  }
+  .refresh-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .refresh-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .rate-btn {
+    border: 1px solid var(--teal);
+    background: var(--teal);
+    color: #fff;
+  }
+  .rate-btn:hover { filter: brightness(0.95); border-color: var(--teal); color: #fff; }
+  .rate-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* Rating progress strip — fixed under the toolbar while a batch runs */
+  #rate-strip {
+    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #f3fbf8;
+    border-bottom: 1px solid #b8e6d8;
+    padding: 8px 32px;
+    font-size: 12px;
+    color: var(--gray-900);
+    display: none; /* visible only when active */
+  }
+  #rate-strip.active { display: block; }
+  #rate-strip .rate-bar {
+    height: 4px;
+    background: #d6efe5;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  #rate-strip .rate-fill {
+    height: 100%;
+    background: var(--teal);
+    width: 0%;
+    transition: width 0.2s ease;
+  }
+  #rate-strip .rate-line { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  #rate-strip .rate-line b { font-weight: 700; }
+  #rate-strip .rate-current { color: var(--gray-700); }
+  #rate-strip .rate-stop {
+    margin-left: auto; border: 1px solid var(--gray-200); background: #fff;
+    color: var(--gray-700); padding: 3px 10px; border-radius: 5px; font-size: 11px;
+    cursor: pointer;
+  }
+  #rate-strip .rate-stop:hover { border-color: #d33; color: #d33; }
+
+  main { padding: 16px 32px 80px; }
+
+  .empty {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--gray-500);
+  }
+  .empty h2 { font-size: 18px; margin-bottom: 8px; color: var(--gray-700); }
+
+  .job-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .job {
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    /* No overflow:hidden — score-info tooltips need to escape the row.
+       Detail panel handles its own bottom-corner radius below. */
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .job:hover { border-color: var(--gray-300); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .job.expanded { border-color: var(--teal); }
+  .job .job-detail { border-radius: 0 0 7px 7px; }
+
+  .job-row {
+    display: grid;
+    grid-template-columns: 40px 68px minmax(0, 1fr) 180px 130px 460px;
+    gap: 14px;
+    padding: 14px 18px;
+    align-items: center;
+    cursor: pointer;
+  }
+  /* Allow grid cells to shrink below their intrinsic min-content (which
+     defeats `text-overflow: ellipsis` on long titles). */
+  .job-row > * { min-width: 0; }
+
+  .submit-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .submit-check input[type=checkbox] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--gray-300);
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s;
+    background: #fff;
+    flex-shrink: 0;
+  }
+  .submit-check input[type=checkbox]:hover {
+    border-color: var(--submitted);
+  }
+  .submit-check input[type=checkbox]:checked {
+    background: var(--submitted);
+    border-color: var(--submitted);
+  }
+  .submit-check input[type=checkbox]:checked::after {
+    content: '✓';
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .job.submitted .job-title { color: var(--gray-500); }
+  .job.submitted .job-company { color: var(--gray-300); }
+  .job.submitted .job-row { opacity: 0.7; }
+  .job.submitted:not(.expanded) .job-row:hover { opacity: 1; }
+
+  /* Skipped jobs — struck through with a reason */
+  .job.skipped .job-title { text-decoration: line-through; color: var(--gray-500); }
+  .job.skipped .job-company { color: var(--gray-300); }
+  .job.skipped .job-row { opacity: 0.55; }
+  .job.skipped:not(.expanded) .job-row:hover { opacity: 0.85; }
+  .skip-note-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 3px;
+    color: hsl(0, 65%, 42%);
+    background: hsl(0, 60%, 96%);
+    border: 1px solid hsl(0, 50%, 82%);
+    white-space: nowrap;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: help;
+  }
+  .btn.skip { color: hsl(0, 55%, 50%); border-color: hsl(0, 40%, 85%); background: hsl(0, 55%, 97%); }
+  .btn.skip:hover { background: hsl(0, 60%, 48%); color: #fff; border-color: hsl(0, 60%, 48%); }
+  .btn.unskip { color: var(--teal); border-color: hsl(187, 40%, 75%); background: var(--teal-bg); }
+  .btn.unskip:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+  .job-num-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .job-num {
+    font-family: 'SF Mono', 'Cascadia Code', Consolas, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-500);
+  }
+
+  /* Score / rating badge — shown under the job number, click to edit */
+  .score {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1.1;
+    transition: all 0.12s;
+    user-select: none;
+  }
+  .score.empty {
+    color: var(--gray-300);
+    border: 1px dashed var(--gray-300);
+    background: transparent;
+    font-weight: 500;
+  }
+  .score.empty:hover { color: var(--teal); border-color: var(--teal); }
+  .score.tier-5 { color: hsl(145,55%,22%); background: var(--green-bg);          border: 1px solid hsl(145,40%,72%); }
+  .score.tier-4 { color: var(--teal-dark);  background: var(--teal-bg);          border: 1px solid hsl(187,40%,75%); }
+  .score.tier-3 { color: hsl(35,75%,28%);   background: hsl(35,80%,93%);         border: 1px solid hsl(35,55%,72%); }
+  .score.tier-2 { color: hsl(20,75%,38%);   background: hsl(20,75%,94%);         border: 1px solid hsl(20,55%,75%); }
+  .score.tier-1 { color: var(--danger);     background: hsl(0,60%,96%);          border: 1px solid hsl(0,50%,82%); }
+  .score:not(.empty):hover { filter: brightness(0.95); }
+
+  /* Info icon next to a rated badge — hover for the 5 reasons */
+  .score-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .score-info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    color: var(--gray-700);
+    font-family: 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: help;
+    user-select: none;
+    position: relative;
+    transition: background 0.12s, color 0.12s;
+  }
+  .score-info:hover { background: var(--teal); color: #fff; }
+  .score-tooltip {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 320px;
+    background: var(--gray-900);
+    color: hsl(0,0%,92%);
+    border-radius: 6px;
+    padding: 12px 14px 12px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    font-style: normal;
+    font-weight: 400;
+    text-align: left;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    z-index: 500;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s, visibility 0.15s;
+  }
+  .score-tooltip::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-bottom-color: var(--gray-900);
+    border-top: 0;
+  }
+  .score-info:hover .score-tooltip { visibility: visible; opacity: 1; }
+  .score-tooltip-title {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(187,40%,75%);
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .score-tooltip ol {
+    margin: 0;
+    padding-left: 22px;
+    color: hsl(0,0%,90%);
+  }
+  .score-tooltip ol li {
+    margin-bottom: 4px;
+    line-height: 1.5;
+  }
+  .score-tooltip ol li:last-child { margin-bottom: 0; }
+
+  /* Floating score picker (with transparent backdrop for outside-click dismissal) */
+  .score-picker-backdrop {
+    position: fixed;
+    inset: 0;
+    background: transparent;
+    z-index: 999;
+  }
+  .score-picker {
+    position: absolute;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    z-index: 1000;
+    min-width: 200px;
+  }
+  .score-picker button {
+    border: 1px solid var(--gray-200);
+    background: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 4px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--gray-700);
+  }
+  .score-picker button:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .score-picker button.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .score-picker button.clear {
+    grid-column: 1 / -1;
+    color: var(--danger);
+    border-color: hsl(0,50%,85%);
+    background: hsl(0,60%,98%);
+  }
+  .score-picker button.clear:hover { background: var(--danger); color: #fff; }
+
+  .job-title {
+    font-weight: 600;
+    font-size: 13.5px;
+    color: var(--gray-900);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .job-company {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .job-location {
+    font-size: 12px;
+    color: var(--gray-700);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .status {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .badge.done { color: var(--green); background: var(--green-bg); border: 1px solid hsl(145,35%,80%); }
+  .badge.pending { color: var(--warn); background: hsl(35,85%,95%); border: 1px solid hsl(35,55%,82%); }
+  .badge.missing { color: var(--gray-500); background: var(--gray-100); border: 1px solid var(--gray-200); }
+  .badge.cover { color: var(--purple); background: hsl(270,40%,95%); border: 1px solid hsl(270,40%,82%); }
+  .badge.outreach { color: hsl(35,75%,28%); background: hsl(35,75%,94%); border: 1px solid hsl(35,55%,75%); }
+  .badge.apply-indeed   { color: hsl(225,60%,30%); background: hsl(225,70%,95%);  border: 1px solid hsl(225,50%,80%); }
+  .badge.apply-company  { color: hsl(190,55%,25%); background: hsl(190,55%,94%); border: 1px solid hsl(190,40%,78%); }
+  .badge.apply-unknown  { color: var(--gray-500); background: var(--gray-100); border: 1px dashed var(--gray-200); }
+
+  .company-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+    min-width: 0;
+  }
+  .company-row .job-company { margin-top: 0; flex: 1 1 auto; min-width: 0; }
+  .company-row .badge { flex: 0 0 auto; font-size: 9.5px; padding: 1px 6px; }
+
+  .actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .btn {
+    border: 1px solid var(--gray-200);
+    background: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--gray-700);
+    font-family: inherit;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--teal); color: var(--teal); }
+  .btn.primary { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .btn.primary:hover { background: var(--teal-dark); border-color: var(--teal-dark); color: #fff; }
+  .btn.primary-purple { background: var(--purple); color: #fff; border-color: var(--purple); }
+  .btn.primary-purple:hover { background: hsl(270, 70%, 36%); border-color: hsl(270, 70%, 36%); color: #fff; }
+  .btn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn.file { background: var(--green-bg); color: var(--green); border-color: hsl(145,35%,80%); }
+  .btn.file:hover { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn.cover { background: hsl(270,40%,95%); color: var(--purple); border-color: hsl(270,40%,82%); }
+  .btn.cover:hover { background: var(--purple); color: #fff; border-color: var(--purple); }
+  .btn.outreach { background: hsl(35,75%,94%); color: hsl(35,75%,28%); border-color: hsl(35,55%,75%); }
+  .btn.outreach:hover { background: hsl(35,75%,42%); color: #fff; border-color: hsl(35,75%,42%); }
+  .btn.primary-orange { background: hsl(35,75%,42%); color: #fff; border-color: hsl(35,75%,42%); }
+  .btn.primary-orange:hover { background: hsl(35,75%,32%); border-color: hsl(35,75%,32%); color: #fff; }
+  a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+  .btn.danger { color: var(--danger); border-color: hsl(0,50%,85%); background: hsl(0,60%,97%); }
+  .btn.danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+  .btn.apply { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn.apply:hover { background: hsl(145,55%,24%); border-color: hsl(145,55%,24%); }
+
+  /* Confirmation Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20,24,31,0.55);
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.15s ease-out;
+  }
+  .modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px 32px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    animation: scaleIn 0.18s ease-out;
+  }
+  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--gray-900); }
+  .modal p { font-size: 13px; color: var(--gray-500); line-height: 1.5; margin-bottom: 20px; }
+  .modal p strong { color: var(--danger); font-weight: 600; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .modal-actions .btn { padding: 8px 18px; font-size: 13px; }
+  .modal-actions .btn.confirm-delete { background: var(--danger); color: #fff; border-color: var(--danger); }
+  .modal-actions .btn.confirm-delete:hover { background: hsl(0,65%,40%); border-color: hsl(0,65%,40%); }
+
+  /* Add-JD modal — larger, form-style */
+  .modal.modal-form { max-width: 640px; padding: 24px 28px; }
+  .modal.modal-form h3 { margin-bottom: 4px; }
+  .modal.modal-form > p.lead { font-size: 12.5px; color: var(--gray-500); margin-bottom: 16px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-bottom: 12px; }
+  .form-grid .span-2 { grid-column: 1 / -1; }
+  .form-grid label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gray-500);
+    margin-bottom: 4px;
+  }
+  .form-grid label .req { color: var(--danger); margin-left: 2px; }
+  .form-grid input[type=text],
+  .form-grid input[type=url],
+  .form-grid select,
+  .form-grid textarea {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: 5px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--gray-900);
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-grid input:focus,
+  .form-grid select:focus,
+  .form-grid textarea:focus { border-color: var(--teal); }
+  .form-grid textarea {
+    min-height: 180px;
+    resize: vertical;
+    line-height: 1.5;
+    font-family: 'SF Mono', 'Cascadia Code', Consolas, monospace;
+    font-size: 12px;
+  }
+  .form-grid textarea.drag-over { border-color: var(--teal); background: var(--teal-bg); }
+  .form-hint {
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-top: 4px;
+  }
+  .form-error {
+    background: hsl(0,60%,97%);
+    border: 1px solid hsl(0,50%,85%);
+    color: var(--danger);
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .form-error.active { display: block; }
+  .form-error a { color: var(--danger); font-weight: 600; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .job-detail {
+    background: var(--gray-50);
+    border-top: 1px solid var(--gray-200);
+    padding: 18px 22px;
+    display: none;
+  }
+  .job.expanded .job-detail { display: block; }
+
+  .detail-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 24px;
+    margin-bottom: 14px;
+    font-size: 12px;
+  }
+  .detail-meta dt { color: var(--gray-500); font-weight: 500; }
+  .detail-meta dd { color: var(--gray-900); }
+  .detail-meta a { color: var(--teal); text-decoration: none; }
+  .detail-meta a:hover { text-decoration: underline; }
+
+  .detail-prompt {
+    background: var(--gray-900);
+    color: hsl(187,40%,85%);
+    font-family: 'SF Mono', 'Cascadia Code', Consolas, monospace;
+    font-size: 12px;
+    padding: 12px 14px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .detail-prompt code { flex: 1; word-break: break-all; }
+  .detail-prompt button {
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    flex-shrink: 0;
+  }
+  .detail-prompt button:hover { background: var(--teal-dark); }
+  .detail-prompt button.copied { background: var(--green); }
+  .detail-prompt.cover { color: hsl(270, 40%, 85%); }
+  .detail-prompt.cover button { background: var(--purple); }
+  .detail-prompt.cover button:hover { background: hsl(270, 70%, 36%); }
+  .detail-prompt.cover button.copied { background: var(--green); }
+  .detail-prompt.outreach { color: hsl(35, 85%, 80%); }
+  .detail-prompt.outreach button { background: hsl(35, 75%, 42%); }
+  .detail-prompt.outreach button:hover { background: hsl(35, 75%, 32%); }
+  .detail-prompt.outreach button.copied { background: var(--green); }
+
+  .detail-jd {
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    padding: 14px 16px;
+    max-height: 360px;
+    overflow-y: auto;
+    font-size: 12px;
+    color: var(--gray-700);
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 900px) {
+    .job-row { grid-template-columns: 32px 48px 1fr 120px; }
+    .job-row .job-location, .job-row .status { display: none; }
+    header { padding: 16px 20px; }
+    .toolbar, main { padding-left: 20px; padding-right: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Job Search Dashboard</h1>
+    <div style="font-size:12px;opacity:0.85;margin-top:4px;">Job descriptions & resume status</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="stat-total">—</b><span>total</span></div>
+    <div class="stat"><b id="stat-done">—</b><span>resume done</span></div>
+    <div class="stat"><b id="stat-submitted">—</b><span>submitted</span></div>
+    <div class="stat"><b id="stat-skipped">—</b><span>skipped</span></div>
+    <div class="stat"><b id="stat-pending">—</b><span>pending</span></div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <input type="search" id="search" placeholder="Search company, role, or folder…" autocomplete="off">
+  <div class="filter-btns">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="pending">Pending</button>
+    <button class="filter-btn" data-filter="done">Done</button>
+    <button class="filter-btn" data-filter="submitted">Submitted</button>
+    <button class="filter-btn" data-filter="not-submitted">Not Submitted</button>
+    <button class="filter-btn" data-filter="skipped">Skipped</button>
+    <button class="filter-btn" data-filter="top">★ Top ≥4</button>
+    <button class="filter-btn" data-filter="rated">Rated</button>
+    <button class="filter-btn" data-filter="unrated">Unrated</button>
+  </div>
+  <select class="score-range" id="score-range" title="Filter by score range">
+    <option value="all">All scores</option>
+    <option value="4-5">★ 4.0 – 5.0</option>
+    <option value="3-4">3.0 – 3.9</option>
+    <option value="2-3">2.0 – 2.9</option>
+    <option value="1-2">1.0 – 1.9</option>
+  </select>
+  <button class="refresh-btn rate-btn" id="rate-unrated" title="Score every unrated job with your configured AI model. Writes score.json with reasons.">★ Rate unrated</button>
+  <button class="refresh-btn" id="add-jd" title="Paste or drop a job description to add it as a new entry">+ Add JD</button>
+  <button class="refresh-btn" id="refresh">↻ Refresh</button>
+</div>
+
+<div id="rate-strip">
+  <div class="rate-line">
+    <b id="rate-count">0 / 0</b>
+    <span class="rate-current" id="rate-current">queued…</span>
+    <button class="rate-stop" id="rate-stop">Stop</button>
+  </div>
+  <div class="rate-bar"><div class="rate-fill" id="rate-fill"></div></div>
+</div>
+
+<main>
+  <div id="job-list" class="job-list"></div>
+  <div id="empty" class="empty" style="display:none;">
+    <h2>No jobs found</h2>
+    <div>Try a different filter, or send one from Indeed using the browser extension.</div>
+  </div>
+</main>
+
+<script>
+const state = { jobs: [], filter: 'all', search: '', scoreRange: 'all' };
+
+// Each range is inclusive of the lower bound and exclusive of the upper bound,
+// except the top band which includes 5.0 so a perfect score isn't dropped.
+const SCORE_RANGES = {
+  '4-5': { min: 4.0, max: 5.0, inclusiveMax: true },
+  '3-4': { min: 3.0, max: 4.0, inclusiveMax: false },
+  '2-3': { min: 2.0, max: 3.0, inclusiveMax: false },
+  '1-2': { min: 1.0, max: 2.0, inclusiveMax: false },
+};
+
+function passesScoreRange(job, rangeKey) {
+  if (!rangeKey || rangeKey === 'all') return true;
+  const r = SCORE_RANGES[rangeKey];
+  if (!r) return true;
+  if (typeof job.score !== 'number') return false;
+  if (job.score < r.min) return false;
+  return r.inclusiveMax ? job.score <= r.max : job.score < r.max;
+}
+
+async function load() {
+  const res = await fetch('/api/jobs');
+  const data = await res.json();
+  state.jobs = data.jobs || [];
+  render();
+}
+
+function statusOf(job) {
+  if (job.hasPdfCv && job.hasHtmlCv) return 'done';
+  if (job.hasJd) return 'pending';
+  return 'missing';
+}
+
+function scoreTier(score) {
+  if (score == null) return 'empty';
+  if (score >= 4.5) return 'tier-5';
+  if (score >= 4.0) return 'tier-4';
+  if (score >= 3.5) return 'tier-3';
+  if (score >= 3.0) return 'tier-2';
+  return 'tier-1';
+}
+
+function applyTypeBadge(applyType) {
+  if (!applyType) return null;
+  const t = String(applyType).toLowerCase();
+  if (t === 'indeed') {
+    return el('span', { class: 'badge apply-indeed', title: 'Apply with Indeed (quick apply, stays on indeed.com)' }, '⚡ Indeed Apply');
+  }
+  if (t === 'company') {
+    return el('span', { class: 'badge apply-company', title: 'Apply on company site (external -- redirects to the employer)' }, '🔗 Company Site');
+  }
+  if (t === 'unknown') {
+    return el('span', { class: 'badge apply-unknown', title: 'Apply route not detected on the Indeed page' }, '? Apply');
+  }
+  return null;
+}
+
+function scoreBadge(job) {
+  const tier = scoreTier(job.score);
+  const label = job.score == null ? '☆ rate' : `★ ${job.score.toFixed(1)}`;
+  const title = job.score == null
+    ? 'Click to set a rating'
+    : `Rating ${job.score.toFixed(1)}/5 — click to change`;
+  const badge = el('span', {
+    class: `score ${tier}`,
+    title,
+    onclick: (e) => { e.stopPropagation(); openScorePicker(badge, job); },
+  }, label);
+
+  // No reasons → return just the badge
+  if (!Array.isArray(job.scoreReasons) || job.scoreReasons.length === 0) return badge;
+
+  // Reasons present → wrap badge + info icon in a row container
+  const row = el('span', { class: 'score-row' });
+  row.appendChild(badge);
+  row.appendChild(infoIcon(job));
+  return row;
+}
+
+function infoIcon(job) {
+  const icon = el('span', {
+    class: 'score-info',
+    title: 'Why this rating',
+    onclick: (e) => e.stopPropagation(), // don't trigger row expand or picker
+  }, 'i');
+  const tooltip = el('div', { class: 'score-tooltip' });
+  tooltip.appendChild(el('div', { class: 'score-tooltip-title' }, `Why ${job.score.toFixed(1)} / 5`));
+  const ol = el('ol');
+  for (const r of job.scoreReasons) ol.appendChild(el('li', {}, r));
+  tooltip.appendChild(ol);
+  icon.appendChild(tooltip);
+  return icon;
+}
+
+function openScorePicker(anchor, job) {
+  // Close any picker that's already open
+  document.querySelectorAll('.score-picker, .score-picker-backdrop').forEach(p => p.remove());
+
+  // Backdrop: a transparent full-viewport div behind the picker that dismisses
+  // on outside click. Cleaner than a global capture-phase listener (no race
+  // with the picker buttons' own click handlers).
+  const backdrop = el('div', { class: 'score-picker-backdrop' });
+  const close = () => { picker.remove(); backdrop.remove(); document.removeEventListener('keydown', onKey); };
+  backdrop.addEventListener('click', close);
+
+  const picker = el('div', { class: 'score-picker' });
+  const values = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0];
+  for (const v of values) {
+    const isActive = job.score != null && Math.abs(job.score - v) < 0.05;
+    picker.appendChild(el('button', {
+      class: isActive ? 'active' : '',
+      onclick: (e) => { e.stopPropagation(); setScore(job, v); close(); },
+    }, v.toFixed(1)));
+  }
+  picker.appendChild(el('button', {
+    class: 'clear',
+    onclick: (e) => {
+      e.stopPropagation();
+      // "Cancel" on an empty rating just closes; "Clear" on a set rating clears.
+      if (job.score != null) setScore(job, null);
+      close();
+    },
+  }, job.score == null ? 'Cancel' : '× Clear rating'));
+
+  // Position the picker just below and aligned with the badge
+  const rect = anchor.getBoundingClientRect();
+  picker.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+  picker.style.left = (rect.left + window.scrollX) + 'px';
+
+  // Order matters: backdrop first (lower z-index), picker on top
+  document.body.appendChild(backdrop);
+  document.body.appendChild(picker);
+
+  // Escape key also dismisses
+  function onKey(e) { if (e.key === 'Escape') close(); }
+  document.addEventListener('keydown', onKey);
+}
+
+async function setScore(job, score) {
+  const url = '/api/score?folder=' + encodeURIComponent(job.folder)
+    + '&score=' + (score == null ? 'clear' : score);
+  try {
+    const res = await fetch(url, { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      job.score = data.score; // null when cleared, number otherwise
+      render();
+    } else {
+      alert('Failed to set rating: ' + (data.error || 'unknown error'));
+    }
+  } catch (err) {
+    alert('Failed to set rating: ' + err.message);
+  }
+}
+
+function render() {
+  const list = document.getElementById('job-list');
+  const empty = document.getElementById('empty');
+  const term = state.search.toLowerCase();
+
+  const filtered = state.jobs.filter(j => {
+    const status = statusOf(j);
+    if (state.filter === 'pending' && status !== 'pending') return false;
+    if (state.filter === 'done' && status !== 'done') return false;
+    if (state.filter === 'submitted' && !j.submitted) return false;
+    if (state.filter === 'not-submitted' && (j.submitted || status !== 'done')) return false;
+    if (state.filter === 'top' && !(typeof j.score === 'number' && j.score >= 4)) return false;
+    if (state.filter === 'rated' && typeof j.score !== 'number') return false;
+    if (state.filter === 'unrated' && typeof j.score === 'number') return false;
+    if (state.filter === 'skipped' && !j.skipNote) return false;
+    if (!passesScoreRange(j, state.scoreRange)) return false;
+    if (!term) return true;
+    return [j.title, j.company, j.location, j.folder, j.slug]
+      .some(v => (v || '').toLowerCase().includes(term));
+  });
+
+  list.innerHTML = '';
+  empty.style.display = filtered.length ? 'none' : 'block';
+
+  for (const job of filtered) {
+    list.appendChild(jobCard(job));
+  }
+
+  document.getElementById('stat-total').textContent = state.jobs.length;
+  document.getElementById('stat-done').textContent = state.jobs.filter(j => statusOf(j) === 'done').length;
+  document.getElementById('stat-submitted').textContent = state.jobs.filter(j => j.submitted).length;
+  document.getElementById('stat-skipped').textContent = state.jobs.filter(j => j.skipNote).length;
+  document.getElementById('stat-pending').textContent = state.jobs.filter(j => statusOf(j) === 'pending').length;
+}
+
+function el(tag, attrs = {}, ...children) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v;
+    else if (k === 'onclick') e.addEventListener('click', v);
+    else if (v != null) e.setAttribute(k, v);
+  }
+  for (const c of children) {
+    if (c == null) continue;
+    e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  }
+  return e;
+}
+
+function jobCard(job) {
+  const status = statusOf(job);
+  const card = el('div', { class: 'job' + (job.submitted ? ' submitted' : '') + (job.skipNote ? ' skipped' : '') });
+
+  const row = el('div', { class: 'job-row', onclick: (e) => {
+    if (e.target.closest('button') || e.target.closest('.submit-check')) return;
+    card.classList.toggle('expanded');
+    if (card.classList.contains('expanded') && !card.dataset.loaded) loadJd(card, job);
+  }});
+
+  // Submitted checkbox
+  const checkCell = el('div', { class: 'submit-check' });
+  const checkbox = el('input', {
+    type: 'checkbox',
+    title: job.submitted ? 'Mark as not submitted' : 'Mark as submitted',
+  });
+  checkbox.checked = !!job.submitted;
+  checkbox.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const res = await fetch('/api/submit?folder=' + encodeURIComponent(job.folder), { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      job.submitted = data.submitted;
+      card.classList.toggle('submitted', data.submitted);
+      checkbox.checked = data.submitted;
+      checkbox.title = data.submitted ? 'Mark as not submitted' : 'Mark as submitted';
+      document.getElementById('stat-submitted').textContent = state.jobs.filter(j => j.submitted).length;
+    }
+  });
+  checkCell.appendChild(checkbox);
+  row.appendChild(checkCell);
+
+  const numCell = el('div', { class: 'job-num-cell' });
+  numCell.appendChild(el('div', { class: 'job-num' }, '#' + job.num));
+  numCell.appendChild(scoreBadge(job));
+  row.appendChild(numCell);
+
+  const titleCell = el('div');
+  titleCell.appendChild(el('div', { class: 'job-title' }, job.title || job.slug || '(untitled)'));
+  const companyRow = el('div', { class: 'company-row' });
+  companyRow.appendChild(el('div', { class: 'job-company' }, job.company || job.folder));
+  const applyBadge = applyTypeBadge(job.applyType);
+  if (applyBadge) companyRow.appendChild(applyBadge);
+  if (job.skipNote) {
+    companyRow.appendChild(el('span', {
+      class: 'skip-note-badge',
+      title: 'Skip reason: ' + job.skipNote,
+    }, '⛔ ' + job.skipNote));
+  }
+  titleCell.appendChild(companyRow);
+  row.appendChild(titleCell);
+
+  row.appendChild(el('div', { class: 'job-location' }, job.location || '—'));
+
+  const statusCell = el('div', { class: 'status' });
+  if (!job.hasJd) {
+    statusCell.appendChild(el('span', { class: 'badge missing' }, 'No JD'));
+  } else if (status === 'done') {
+    statusCell.appendChild(el('span', { class: 'badge done' }, '✓ Resume'));
+    if (job.hasPdfCover) statusCell.appendChild(el('span', { class: 'badge cover' }, '✉ Cover'));
+  } else {
+    statusCell.appendChild(el('span', { class: 'badge pending' }, '⏳ Pending'));
+  }
+  row.appendChild(statusCell);
+
+  const actions = el('div', { class: 'actions' });
+
+  if (job.pdfCvName) {
+    const url = '/files?folder=' + encodeURIComponent(job.folder) + '&name=' + encodeURIComponent(job.pdfCvName);
+    const a = el('a', {
+      class: 'btn file',
+      href: url,
+      target: '_blank',
+      rel: 'noopener',
+      title: job.pdfCvName,
+      onclick: (e) => e.stopPropagation()
+    }, '📄 Resume');
+    actions.appendChild(a);
+  }
+  if (job.pdfCoverName) {
+    const url = '/files?folder=' + encodeURIComponent(job.folder) + '&name=' + encodeURIComponent(job.pdfCoverName);
+    const a = el('a', {
+      class: 'btn cover',
+      href: url,
+      target: '_blank',
+      rel: 'noopener',
+      title: job.pdfCoverName,
+      onclick: (e) => e.stopPropagation()
+    }, '✉ Cover');
+    actions.appendChild(a);
+  }
+
+  if (job.url) {
+    const applyA = el('a', {
+      class: 'btn apply',
+      href: job.url,
+      target: '_blank',
+      rel: 'noopener',
+      title: 'Open job posting',
+      onclick: (e) => e.stopPropagation()
+    }, '↗ Apply');
+    actions.appendChild(applyA);
+  }
+
+  const createBtn = el('button', {
+    class: 'btn primary',
+    title: status === 'done' ? 'Write a fresh tailored resume for this job' : 'Write a tailored resume for this job with your AI model',
+    onclick: (e) => { e.stopPropagation(); generateCv(createBtn, job); }
+  }, status === 'done' ? 'CV regen' : 'CV create');
+  actions.appendChild(createBtn);
+
+  row.appendChild(actions);
+
+  // Skip / Unskip button
+  if (job.skipNote) {
+    const unskipBtn = el('button', {
+      class: 'btn unskip',
+      title: 'Remove skip and re-enable this job',
+      onclick: (e) => { e.stopPropagation(); setSkip(job, card, ''); }
+    }, '↩ Unskip');
+    actions.appendChild(unskipBtn);
+  } else {
+    const skipBtn = el('button', {
+      class: 'btn skip',
+      title: 'Mark as skipped with a reason',
+      onclick: (e) => { e.stopPropagation(); openSkipModal(job, card); }
+    }, '⛔ Skip');
+    actions.appendChild(skipBtn);
+  }
+
+  // Delete button (outside the main actions group, far right)
+  const delBtn = el('button', {
+    class: 'btn danger',
+    title: 'Delete this job and all its files',
+    onclick: (e) => { e.stopPropagation(); confirmDelete(job); }
+  }, '🗑');
+  actions.appendChild(delBtn);
+
+  card.appendChild(row);
+
+  // Detail body (lazy filled on expand)
+  const detail = el('div', { class: 'job-detail' });
+  card.appendChild(detail);
+  card.dataset.detail = 'true';
+
+  return card;
+}
+
+async function loadJd(card, job) {
+  const detail = card.querySelector('.job-detail');
+  detail.innerHTML = '<div style="color:var(--gray-500);font-size:12px;">Loading…</div>';
+  card.dataset.loaded = '1';
+
+  let jdText = '(no jd.txt found)';
+  if (job.hasJd) {
+    try {
+      const res = await fetch('/api/jd?folder=' + encodeURIComponent(job.folder));
+      const data = await res.json();
+      if (data.ok) jdText = data.text;
+    } catch {}
+  }
+
+  detail.innerHTML = '';
+
+  const meta = el('dl', { class: 'detail-meta' });
+  const addMeta = (k, v) => {
+    if (!v) return;
+    meta.appendChild(el('dt', {}, k));
+    if (k === 'URL' && /^https?:/.test(v)) {
+      const a = el('a', { href: v, target: '_blank', rel: 'noopener' }, v);
+      meta.appendChild(el('dd', {}, a));
+    } else {
+      meta.appendChild(el('dd', {}, v));
+    }
+  };
+  addMeta('Folder', job.path);
+  addMeta('Company', job.company);
+  addMeta('Location', job.location);
+  addMeta('Pay', job.salary);
+  addMeta('URL', job.url);
+  detail.appendChild(meta);
+
+  // File buttons (HTML + PDF for resume/cover) when present
+  const fileRow = el('div', { class: 'actions', style: 'margin-bottom:12px;justify-content:flex-start;flex-wrap:wrap;' });
+  const addFileBtn = (name, label, cls) => {
+    if (!name) return;
+    const url = '/files?folder=' + encodeURIComponent(job.folder) + '&name=' + encodeURIComponent(name);
+    fileRow.appendChild(el('a', {
+      class: 'btn ' + cls,
+      href: url,
+      target: '_blank',
+      rel: 'noopener',
+      title: name
+    }, label));
+  };
+  addFileBtn(job.pdfCvName, '📄 Resume PDF', 'file');
+  addFileBtn(job.htmlCvName, 'Resume HTML', '');
+  addFileBtn(job.pdfCoverName, '✉ Cover PDF', 'cover');
+  addFileBtn(job.htmlCoverName, 'Cover HTML', '');
+  if (fileRow.childElementCount) detail.appendChild(fileRow);
+
+  detail.appendChild(el('div', { class: 'detail-jd' }, jdText));
+}
+
+async function generateCv(btn, job) {
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Writing…';
+  try {
+    const res = await fetch('/api/generate-cv?folder=' + encodeURIComponent(job.folder), { method: 'POST' });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'unknown error');
+    Object.assign(job, data.job);
+    render();
+  } catch (err) {
+    alert('Resume generation failed: ' + err.message);
+    btn.textContent = label;
+    btn.disabled = false;
+  }
+}
+
+function confirmDelete(job) {
+  // Remove any existing modal
+  document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
+
+  const overlay = el('div', { class: 'modal-overlay', onclick: (e) => {
+    if (e.target === overlay) overlay.remove();
+  }});
+
+  const modal = el('div', { class: 'modal' });
+  modal.appendChild(el('h3', {}, '🗑 Delete job?'));
+
+  const desc = el('p', {});
+  desc.innerHTML = `This will permanently delete <strong>#${job.num} ${job.title || job.slug || 'untitled'}</strong> and all its files (JD, resume, cover letter). This cannot be undone.`;
+  modal.appendChild(desc);
+
+  const actions = el('div', { class: 'modal-actions' });
+  actions.appendChild(el('button', {
+    class: 'btn',
+    onclick: () => overlay.remove()
+  }, 'Cancel'));
+  actions.appendChild(el('button', {
+    class: 'btn confirm-delete',
+    onclick: async () => {
+      overlay.remove();
+      await deleteJob(job);
+    }
+  }, 'Delete'));
+  modal.appendChild(actions);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+}
+
+function openAddJdModal() {
+  // Remove any existing modal so we never stack
+  document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
+
+  const overlay = el('div', { class: 'modal-overlay', onclick: (e) => {
+    if (e.target === overlay) overlay.remove();
+  }});
+
+  const modal = el('div', { class: 'modal modal-form' });
+  modal.appendChild(el('h3', {}, '+ Add a Job Description'));
+  modal.appendChild(el('p', { class: 'lead' },
+    'Paste the JD text below, or drop a .txt file onto the description box. Title, company, and description are required — the rest helps the dashboard show the right metadata.'
+  ));
+
+  const error = el('div', { class: 'form-error' });
+  modal.appendChild(error);
+
+  const grid = el('div', { class: 'form-grid' });
+
+  function field(name, labelText, opts = {}) {
+    const wrap = el('div', { class: opts.span2 ? 'span-2' : '' });
+    const lbl = el('label', { for: 'add-jd-' + name }, labelText);
+    if (opts.required) lbl.appendChild(el('span', { class: 'req' }, '*'));
+    wrap.appendChild(lbl);
+    const input = opts.textarea
+      ? el('textarea', { id: 'add-jd-' + name, name, rows: '10', placeholder: opts.placeholder || '' })
+      : opts.select
+        ? el('select', { id: 'add-jd-' + name, name })
+        : el('input', { id: 'add-jd-' + name, name, type: opts.type || 'text', placeholder: opts.placeholder || '' });
+    if (opts.select) {
+      for (const [val, text] of opts.options) {
+        const o = el('option', { value: val }, text);
+        if (val === opts.defaultValue) o.setAttribute('selected', 'selected');
+        input.appendChild(o);
+      }
+    }
+    wrap.appendChild(input);
+    if (opts.hint) wrap.appendChild(el('div', { class: 'form-hint' }, opts.hint));
+    return { wrap, input };
+  }
+
+  const title    = field('title',    'Job Title',    { required: true, placeholder: 'e.g., Senior Software Engineer' });
+  const company  = field('company',  'Company',      { required: true, placeholder: 'e.g., Acme Corp' });
+  const location = field('location', 'Location',     { placeholder: 'e.g., Houston, TX (Hybrid)' });
+  const salary   = field('salary',   'Pay / Salary', { placeholder: 'e.g., $120,000 - $145,000 a year' });
+  const url      = field('url',      'Job URL',      { type: 'url', placeholder: 'https://…', span2: true });
+  const apply    = field('applyType', 'Apply Route', {
+    select: true,
+    defaultValue: '',
+    options: [
+      ['',        '— (unspecified)'],
+      ['indeed',  '⚡ Apply with Indeed'],
+      ['company', '🔗 Apply on Company Site'],
+      ['unknown', '? Unknown'],
+    ],
+  });
+  const body = field('body', 'Description', {
+    textarea: true,
+    required: true,
+    span2: true,
+    placeholder: 'Paste the full job description here.\n\nDrop a .txt file onto this box to load it.',
+    hint: 'Drop a .txt file anywhere on this box to load its contents. Minimum 30 characters.',
+  });
+
+  grid.appendChild(title.wrap);
+  grid.appendChild(company.wrap);
+  grid.appendChild(location.wrap);
+  grid.appendChild(salary.wrap);
+  grid.appendChild(url.wrap);
+  grid.appendChild(apply.wrap);
+  grid.appendChild(body.wrap);
+  modal.appendChild(grid);
+
+  // Drag-and-drop a .txt file onto the body textarea
+  ['dragenter', 'dragover'].forEach(evt => body.input.addEventListener(evt, (e) => {
+    e.preventDefault(); e.stopPropagation();
+    body.input.classList.add('drag-over');
+  }));
+  ['dragleave', 'drop'].forEach(evt => body.input.addEventListener(evt, (e) => {
+    e.preventDefault(); e.stopPropagation();
+    body.input.classList.remove('drag-over');
+  }));
+  body.input.addEventListener('drop', async (e) => {
+    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file) return;
+    if (file.size > 1_000_000) {
+      showError(error, 'File too large (max 1 MB).');
+      return;
+    }
+    try {
+      const text = await file.text();
+      body.input.value = text;
+      tryAutofillFromBody(text);
+    } catch (err) {
+      showError(error, 'Could not read file: ' + err.message);
+    }
+  });
+
+  // Paste-into-body autofill — if the paste includes our standard header
+  // (Title line + "Company: ..." / "Location: ..." / etc.), pull those out into
+  // the structured fields and leave only the body in the textarea.
+  body.input.addEventListener('paste', (e) => {
+    // Defer one tick so the textarea value reflects the pasted content
+    setTimeout(() => tryAutofillFromBody(body.input.value), 0);
+  });
+
+  function tryAutofillFromBody(text) {
+    if (!text) return;
+    const splitIdx = text.indexOf('\n---\n');
+    if (splitIdx === -1) return; // not in our header format — leave alone
+    const head = text.slice(0, splitIdx);
+    const rest = text.slice(splitIdx + 5).trimStart();
+    const lines = head.split('\n').map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return;
+    // First line = title (only fill if user hasn't typed one yet)
+    if (!title.input.value) title.input.value = lines[0];
+    for (const line of lines.slice(1)) {
+      const m = /^(Company|Location|Pay|Salary|URL|Apply):\s*(.+)$/i.exec(line);
+      if (!m) continue;
+      const key = m[1].toLowerCase();
+      const val = m[2];
+      if (key === 'company'  && !company.input.value)  company.input.value = val;
+      else if (key === 'location' && !location.input.value) location.input.value = val;
+      else if ((key === 'pay' || key === 'salary') && !salary.input.value) salary.input.value = val;
+      else if (key === 'url' && !url.input.value) url.input.value = val;
+      else if (key === 'apply') {
+        const v = val.toLowerCase();
+        if (['indeed', 'company', 'unknown'].includes(v)) apply.input.value = v;
+      }
+    }
+    body.input.value = rest;
+  }
+
+  const actions = el('div', { class: 'modal-actions' });
+  const cancelBtn = el('button', { class: 'btn', onclick: () => overlay.remove() }, 'Cancel');
+  const submitBtn = el('button', { class: 'btn primary', onclick: () => submitAddJd() }, 'Add Job');
+  actions.appendChild(cancelBtn);
+  actions.appendChild(submitBtn);
+  modal.appendChild(actions);
+
+  async function submitAddJd() {
+    hideError(error);
+    const payload = {
+      title:     title.input.value.trim(),
+      company:   company.input.value.trim(),
+      location:  location.input.value.trim(),
+      salary:    salary.input.value.trim(),
+      url:       url.input.value.trim(),
+      applyType: apply.input.value,
+      body:      body.input.value.trim(),
+    };
+    if (!payload.title)   { showError(error, 'Job title is required.'); title.input.focus(); return; }
+    if (!payload.company) { showError(error, 'Company is required.'); company.input.focus(); return; }
+    if (payload.body.length < 30) {
+      showError(error, 'Description is too short (minimum 30 characters).');
+      body.input.focus();
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Adding…';
+    try {
+      const res = await fetch('/jd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        overlay.remove();
+        await load();
+        // Scroll the newly-added job into view if possible
+        const newCard = document.querySelector('.job .job-num');
+        if (newCard) newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      if (res.status === 409 && data.duplicate) {
+        showError(error,
+          `Already saved as #${data.num} (${data.folder}). Use the existing entry instead of re-adding.`);
+      } else {
+        showError(error, data.error || `Server error (${res.status}). Check the bridge log.`);
+      }
+    } catch (err) {
+      showError(error, 'Network error: ' + err.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Add Job';
+    }
+  }
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  title.input.focus();
+
+  function onKey(e) {
+    if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', onKey); }
+  }
+  document.addEventListener('keydown', onKey);
+}
+
+function showError(el, msg)  { el.textContent = msg; el.classList.add('active'); }
+function hideError(el)        { el.textContent = '';  el.classList.remove('active'); }
+
+async function deleteJob(job) {
+  try {
+    const res = await fetch('/api/job?folder=' + encodeURIComponent(job.folder), { method: 'DELETE' });
+    const data = await res.json();
+    if (data.ok) {
+      // Remove from state and re-render immediately
+      state.jobs = state.jobs.filter(j => j.folder !== job.folder);
+      render();
+    } else {
+      alert('Delete failed: ' + (data.error || 'unknown error'));
+    }
+  } catch (err) {
+    alert('Delete failed: ' + err.message);
+  }
+}
+
+function openSkipModal(job, card) {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
+
+  const overlay = el('div', { class: 'modal-overlay', onclick: (e) => {
+    if (e.target === overlay) overlay.remove();
+  }});
+
+  const modal = el('div', { class: 'modal' });
+  modal.appendChild(el('h3', {}, '⛔ Skip job'));
+
+  const desc = el('p', {});
+  desc.innerHTML = `Why can't you apply to <strong>#${job.num} ${job.title || job.slug || 'untitled'}</strong>?`;
+  modal.appendChild(desc);
+
+  const textarea = el('textarea', {
+    style: 'width:100%;min-height:80px;padding:8px 10px;border:1px solid var(--gray-200);border-radius:5px;font-size:13px;font-family:inherit;resize:vertical;outline:none;',
+    placeholder: 'e.g., Requires 10+ years experience, On-site only in Seattle, Need security clearance…',
+  });
+  if (job.skipNote) textarea.value = job.skipNote;
+  modal.appendChild(textarea);
+
+  const actions = el('div', { class: 'modal-actions', style: 'margin-top:16px;' });
+  actions.appendChild(el('button', {
+    class: 'btn',
+    onclick: () => overlay.remove()
+  }, 'Cancel'));
+  actions.appendChild(el('button', {
+    class: 'btn confirm-delete',
+    onclick: async () => {
+      const note = textarea.value.trim();
+      if (!note) { textarea.focus(); return; }
+      overlay.remove();
+      await setSkip(job, card, note);
+    }
+  }, 'Skip Job'));
+  modal.appendChild(actions);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  textarea.focus();
+
+  function onKey(e) {
+    if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', onKey); }
+  }
+  document.addEventListener('keydown', onKey);
+}
+
+async function setSkip(job, card, note) {
+  try {
+    const res = await fetch('/api/skip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folder: job.folder, note }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      job.skipNote = data.skipNote;
+      render();
+    } else {
+      alert('Skip failed: ' + (data.error || 'unknown error'));
+    }
+  } catch (err) {
+    alert('Skip failed: ' + err.message);
+  }
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  state.search = e.target.value;
+  render();
+});
+
+document.querySelectorAll('.filter-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.filter = b.dataset.filter;
+    render();
+  });
+});
+
+const scoreRangeEl = document.getElementById('score-range');
+scoreRangeEl.addEventListener('change', e => {
+  state.scoreRange = e.target.value;
+  scoreRangeEl.classList.toggle('active', state.scoreRange !== 'all');
+  render();
+});
+
+document.getElementById('refresh').addEventListener('click', load);
+document.getElementById('add-jd').addEventListener('click', openAddJdModal);
+
+// ---------- Rate unrated (SSE batch) ----------
+let rateStream = null;
+let rateAutoRefresh = null;
+
+function rateStripShow() {
+  document.getElementById('rate-strip').classList.add('active');
+  document.getElementById('rate-strip').style.display = 'block';
+}
+function rateStripHide() {
+  document.getElementById('rate-strip').classList.remove('active');
+  document.getElementById('rate-strip').style.display = 'none';
+}
+function setRateButton(disabled, text) {
+  const btn = document.getElementById('rate-unrated');
+  btn.disabled = !!disabled;
+  if (text) btn.textContent = text;
+}
+
+function startRateUnrated() {
+  if (rateStream) return;
+  const unratedCount = state.jobs.filter(j => j.score == null && j.hasJd).length;
+  if (unratedCount === 0) {
+    alert('No unrated jobs to rate.');
+    return;
+  }
+  if (!confirm(`Rate ${unratedCount} unrated job${unratedCount === 1 ? '' : 's'} with your AI model?\n\nThis runs sequentially (~5–30s per job). You can click Stop at any time.`)) {
+    return;
+  }
+
+  setRateButton(true, '★ Rating…');
+  rateStripShow();
+  document.getElementById('rate-count').textContent = `0 / ${unratedCount}`;
+  document.getElementById('rate-current').textContent = 'starting…';
+  document.getElementById('rate-fill').style.width = '0%';
+
+  rateStream = new EventSource('/api/rate-unrated');
+
+  rateStream.addEventListener('start', e => {
+    const data = JSON.parse(e.data);
+    document.getElementById('rate-count').textContent = `0 / ${data.total}`;
+    document.getElementById('rate-current').textContent = data.total === 0
+      ? 'nothing to rate.'
+      : `rating ${data.total} job${data.total === 1 ? '' : 's'}…`;
+    if (data.total === 0) finishRate();
+    // Auto-refresh the job list every 4s while rating, so cards update live.
+    rateAutoRefresh = setInterval(load, 4000);
+  });
+
+  rateStream.addEventListener('progress', e => {
+    const d = JSON.parse(e.data);
+    document.getElementById('rate-count').textContent = `${d.index} / ${d.total}`;
+    document.getElementById('rate-fill').style.width = `${(d.index / d.total) * 100}%`;
+    const where = `#${d.num} ${d.company || d.slug || ''}`.trim();
+    if (d.status === 'rated') {
+      document.getElementById('rate-current').textContent = `${where} → ${d.score}/5`;
+    } else {
+      document.getElementById('rate-current').textContent = `${where} · rating…`;
+    }
+  });
+
+  rateStream.addEventListener('error', e => {
+    // SSE 'error' event fires both on parse-error events from server AND on
+    // network errors. Distinguish via e.data presence.
+    if (e.data) {
+      try {
+        const d = JSON.parse(e.data);
+        document.getElementById('rate-current').textContent = `#${d.num} failed: ${d.error}`;
+      } catch {}
+    }
+  });
+
+  rateStream.addEventListener('done', e => {
+    const d = JSON.parse(e.data);
+    document.getElementById('rate-current').textContent =
+      `done — ${d.rated} rated, ${d.errors} error${d.errors === 1 ? '' : 's'}`;
+    document.getElementById('rate-fill').style.width = '100%';
+    finishRate();
+  });
+
+  rateStream.addEventListener('fatal', e => {
+    try {
+      const d = JSON.parse(e.data);
+      alert('Rate-unrated failed: ' + d.error);
+    } catch {}
+    finishRate();
+  });
+
+  rateStream.onerror = () => {
+    // Connection dropped — close cleanly.
+    if (rateStream && rateStream.readyState === EventSource.CLOSED) finishRate();
+  };
+}
+
+function stopRateUnrated() {
+  if (rateStream) {
+    rateStream.close();
+    rateStream = null;
+  }
+  document.getElementById('rate-current').textContent = 'stopped.';
+  finishRate();
+}
+
+function finishRate() {
+  if (rateStream) { rateStream.close(); rateStream = null; }
+  if (rateAutoRefresh) { clearInterval(rateAutoRefresh); rateAutoRefresh = null; }
+  setRateButton(false, '★ Rate unrated');
+  load();
+  // Hide the strip 4s after completion so the user can read the summary.
+  setTimeout(rateStripHide, 4000);
+}
+
+document.getElementById('rate-unrated').addEventListener('click', startRateUnrated);
+document.getElementById('rate-stop').addEventListener('click', stopRateUnrated);
+
+load();
+setInterval(load, 30000);
+</script>
+
+</body>
+</html>

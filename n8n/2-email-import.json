@@ -1,0 +1,182 @@
+{
+  "name": "Job Search Kit — Job-alert email import",
+  "nodes": [
+    {
+      "id": "08a98aed-7f3e-4a1b-89d6-66b92d2aa16e",
+      "name": "New email",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "format": "simple",
+        "options": {
+          "customEmailConfig": "[\"UNSEEN\", [\"OR\", [\"FROM\", \"indeed\"], [\"FROM\", \"linkedin\"]]]"
+        }
+      },
+      "notes": "Connect an IMAP credential for the mailbox that receives your Indeed / LinkedIn job alerts (Gmail: use an App Password). Only unread mail from Indeed or LinkedIn is read. You can also forward alerts to this mailbox."
+    },
+    {
+      "id": "099546bb-7a1f-475c-ae0c-55471496a9b7",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e24a8615-2d0d-4b8f-80a5-b166dad96cb3",
+              "name": "dashboardUrl",
+              "value": "http://host.docker.internal:7867",
+              "type": "string"
+            },
+            {
+              "id": "3154c637-aa40-4561-bec4-8b8e10cd335e",
+              "name": "token",
+              "value": "PASTE_DASHBOARD_TOKEN_HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "Edit these two values. dashboardUrl: http://localhost:7867 if n8n runs directly on your computer, http://host.docker.internal:7867 if n8n runs in Docker. token: the DASHBOARD_TOKEN from your .env."
+    },
+    {
+      "id": "4a63aff9-9328-46a3-b201-86eedf5fbe2b",
+      "name": "Extract job links",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Pull Indeed and LinkedIn job links out of a job-alert email.\nconst e = $('New email').item.json;\nconst text = [e.textHtml, e.textPlain, e.html, e.text].filter(Boolean).join('\\n');\nconst urls = new Set();\nfor (const m of text.matchAll(/[?&](?:amp;)?v?jk=([0-9a-f]{10,20})/gi)) urls.add(`https://www.indeed.com/viewjob?jk=${m[1].toLowerCase()}`);\nfor (const m of text.matchAll(/linkedin\\.com\\/(?:comm\\/)?jobs\\/view\\/(\\d{6,})/gi)) urls.add(`https://www.linkedin.com/jobs/view/${m[1]}/`);\nconst from = typeof e.from === 'string' ? e.from : (e.from?.text || e.from?.value?.[0]?.address || '');\nreturn [{ json: { urls: [...urls], count: urls.size, subject: e.subject || '', from } }];"
+      }
+    },
+    {
+      "id": "08bb9fc0-e584-47d4-9c7d-8463b7c00679",
+      "name": "Any jobs?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8c73500f-7bb4-4d90-b4d6-19de2ac0f658",
+              "leftValue": "={{ $json.count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a214bba5-4330-4039-8955-37cc994dce31",
+      "name": "Queue jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -20
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Settings').item.json.dashboardUrl }}/api/queue",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Settings').item.json.token }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ urls: $json.urls, source: 'email', subject: $json.subject, from: $json.from }) }}"
+      }
+    }
+  ],
+  "connections": {
+    "New email": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Extract job links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract job links": {
+      "main": [
+        [
+          {
+            "node": "Any jobs?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any jobs?": {
+      "main": [
+        [
+          {
+            "node": "Queue jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "active": false
+}
